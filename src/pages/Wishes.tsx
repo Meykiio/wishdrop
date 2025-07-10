@@ -39,11 +39,11 @@ const Wishes = () => {
         .eq('is_private', false);
 
       if (category) {
-        query = query.eq('category', category);
+        query = query.eq('category', category as Tables<'wishes'>['category']);
       }
 
       if (urgency) {
-        query = query.eq('urgency', urgency);
+        query = query.eq('urgency', urgency as Tables<'wishes'>['urgency']);
       }
 
       if (searchTerm) {
