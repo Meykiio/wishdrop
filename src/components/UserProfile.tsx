@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Edit3, Star, User, Heart, Gift } from 'lucide-react';
+import { Edit3, Star, User, Heart, Gift, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'wisher' | 'donor'>('wisher');
+  const [role, setRole] = useState<'wisher' | 'donor' | 'admin'>('wisher');
   const [loading, setLoading] = useState(false);
   
   const { user, profile, updateProfile } = useAuth();
@@ -64,6 +64,28 @@ export const UserProfile = () => {
     );
   }
 
+  const getRoleIcon = (userRole: string) => {
+    switch (userRole) {
+      case 'donor':
+        return <Gift className="h-3 w-3 mr-1" />;
+      case 'admin':
+        return <Shield className="h-3 w-3 mr-1" />;
+      default:
+        return <Heart className="h-3 w-3 mr-1" />;
+    }
+  };
+
+  const getRoleLabel = (userRole: string) => {
+    switch (userRole) {
+      case 'donor':
+        return 'Donor';
+      case 'admin':
+        return 'Admin';
+      default:
+        return 'Wisher';
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Basic Profile Card */}
@@ -86,12 +108,9 @@ export const UserProfile = () => {
                     <span className="font-medium">{profile.karma || 0}</span>
                     <span className="text-sm text-muted-foreground">karma</span>
                   </div>
-                  <Badge variant={profile.role === 'donor' ? 'default' : 'secondary'}>
-                    {profile.role === 'donor' ? (
-                      <><Gift className="h-3 w-3 mr-1" /> Donor</>
-                    ) : (
-                      <><Heart className="h-3 w-3 mr-1" /> Wisher</>
-                    )}
+                  <Badge variant={profile.role === 'donor' ? 'default' : profile.role === 'admin' ? 'destructive' : 'secondary'}>
+                    {getRoleIcon(profile.role || 'wisher')}
+                    {getRoleLabel(profile.role || 'wisher')}
                   </Badge>
                 </div>
               </div>
@@ -122,7 +141,7 @@ export const UserProfile = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="role">I am primarily a...</Label>
-                <Select value={role} onValueChange={(value: 'wisher' | 'donor') => setRole(value)}>
+                <Select value={role} onValueChange={(value: 'wisher' | 'donor' | 'admin') => setRole(value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
@@ -139,6 +158,14 @@ export const UserProfile = () => {
                         Donor - I help fulfill wishes
                       </div>
                     </SelectItem>
+                    {profile.role === 'admin' && (
+                      <SelectItem value="admin">
+                        <div className="flex items-center">
+                          <Shield className="h-4 w-4 mr-2" />
+                          Admin - I manage the platform
+                        </div>
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
@@ -171,6 +198,11 @@ export const UserProfile = () => {
                   <>
                     As a <strong>Donor</strong>, you help make wishes come true by contributing to causes you care about. 
                     You can browse wishes, make donations, and track your impact through karma points.
+                  </>
+                ) : profile.role === 'admin' ? (
+                  <>
+                    As an <strong>Admin</strong>, you have special privileges to manage the platform, 
+                    moderate content, and help ensure a safe and positive experience for all users.
                   </>
                 ) : (
                   <>
