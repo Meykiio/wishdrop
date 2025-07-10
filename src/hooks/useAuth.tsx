@@ -37,19 +37,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        // Give the trigger time to create profile if it's a new user
+        if (event === 'SIGNED_IN') {
+          setTimeout(() => fetchProfile(session.user.id), 1000);
+        } else {
+          await fetchProfile(session.user.id);
+        }
       } else {
         setProfile(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -57,16 +64,67 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to handle no results
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        // If profile doesn't exist, try to create it
+        if (error.code === 'PGRST116') {
+          await createProfile(userId);
+          return;
+        }
+        throw error;
+      }
+      
+      if (!data) {
+        console.log('No profile found, creating one...');
+        await createProfile(userId);
+        return;
+      }
+      
+      console.log('Profile fetched:', data);
       setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error in fetchProfile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createProfile = async (userId: string) => {
+    try {
+      console.log('Creating profile for user:', userId);
+      const { data: userData } = await supabase.auth.getUser();
+      const email = userData.user?.email || '';
+      const name = userData.user?.user_metadata?.name || '';
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert([{
+          id: userId,
+          email: email,
+          name: name,
+          role: 'wisher' // Default role
+        }])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating profile:', error);
+        throw error;
+      }
+      
+      console.log('Profile created:', data);
+      setProfile(data);
+    } catch (error) {
+      console.error('Error in createProfile:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

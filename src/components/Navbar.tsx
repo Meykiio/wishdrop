@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Heart, Menu, Plus, Trophy, User, LogOut, LogIn } from 'lucide-react';
+import { Heart, Menu, Plus, Trophy, User, LogOut, LogIn, Gift } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -43,7 +43,7 @@ const Navbar = () => {
             <Link to="/leaderboard" className="text-gray-600 hover:text-gray-900 transition-colors">
               Leaderboard
             </Link>
-            {user && (
+            {user && profile?.role === 'wisher' && (
               <Link to="/make-wish" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Make a Wish
               </Link>
@@ -54,12 +54,14 @@ const Navbar = () => {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                <Button asChild variant="default" size="sm" className="hidden md:flex">
-                  <Link to="/make-wish">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Make a Wish
-                  </Link>
-                </Button>
+                {profile?.role === 'wisher' && (
+                  <Button asChild variant="default" size="sm" className="hidden md:flex">
+                    <Link to="/make-wish">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Make a Wish
+                    </Link>
+                  </Button>
+                )}
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -79,6 +81,13 @@ const Navbar = () => {
                         <p className="w-[200px] truncate text-sm text-muted-foreground">
                           {profile?.email}
                         </p>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          {profile?.role === 'donor' ? (
+                            <><Gift className="h-3 w-3" /> Donor</>
+                          ) : (
+                            <><Heart className="h-3 w-3" /> Wisher</>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <DropdownMenuItem asChild>
@@ -139,7 +148,7 @@ const Navbar = () => {
               >
                 Leaderboard
               </Link>
-              {user && (
+              {user && profile?.role === 'wisher' && (
                 <Link
                   to="/make-wish"
                   className="px-2 py-1 text-gray-600 hover:text-gray-900"

@@ -4,33 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit3, Star, Trophy, Heart, Gift } from 'lucide-react';
+import { Edit3, Star, User, Heart, Gift } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Tables } from '@/integrations/supabase/types';
-
-type UserBadge = Tables<'user_badges'> & {
-  badges: Tables<'badges'>;
-};
-
-type UserWish = Tables<'wishes'>;
-type UserDonation = Tables<'donations'> & {
-  wishes: Tables<'wishes'>;
-};
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState('');
-  const [bio, setBio] = useState('');
-  const [location, setLocation] = useState('');
-  const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
-  const [userWishes, setUserWishes] = useState<UserWish[]>([]);
-  const [userDonations, setUserDonations] = useState<UserDonation[]>([]);
+  const [role, setRole] = useState<'wisher' | 'donor'>('wisher');
   const [loading, setLoading] = useState(false);
   
   const { user, profile, updateProfile } = useAuth();
@@ -39,58 +23,16 @@ export const UserProfile = () => {
   useEffect(() => {
     if (profile) {
       setName(profile.name || '');
-      setBio(profile.bio || '');
-      setLocation(profile.location || '');
+      setRole(profile.role || 'wisher');
     }
   }, [profile]);
-
-  useEffect(() => {
-    if (user) {
-      fetchUserData();
-    }
-  }, [user]);
-
-  const fetchUserData = async () => {
-    if (!user) return;
-
-    try {
-      // Fetch user badges
-      const { data: badges } = await supabase
-        .from('user_badges')
-        .select('*, badges(*)')
-        .eq('user_id', user.id);
-      
-      setUserBadges(badges || []);
-
-      // Fetch user wishes
-      const { data: wishes } = await supabase
-        .from('wishes')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      setUserWishes(wishes || []);
-
-      // Fetch user donations
-      const { data: donations } = await supabase
-        .from('donations')
-        .select('*, wishes(*)')
-        .eq('donor_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      setUserDonations(donations || []);
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
-  };
 
   const handleSave = async () => {
     setLoading(true);
     try {
       await updateProfile({
         name,
-        bio,
-        location,
+        role,
       });
       
       toast({
@@ -100,9 +42,10 @@ export const UserProfile = () => {
       
       setIsEditing(false);
     } catch (error: any) {
+      console.error('Profile update error:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Failed to update profile',
         variant: 'destructive',
       });
     } finally {
@@ -111,17 +54,24 @@ export const UserProfile = () => {
   };
 
   if (!profile) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading profile...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Profile Header */}
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Basic Profile Card */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
+              <Avatar className="h-16 w-16">
                 <AvatarImage src={profile.profile_pic || ''} />
                 <AvatarFallback className="text-lg">
                   {profile.name?.charAt(0) || 'U'}
@@ -136,8 +86,12 @@ export const UserProfile = () => {
                     <span className="font-medium">{profile.karma || 0}</span>
                     <span className="text-sm text-muted-foreground">karma</span>
                   </div>
-                  <Badge variant="outline">
-                    {profile.role}
+                  <Badge variant={profile.role === 'donor' ? 'default' : 'secondary'}>
+                    {profile.role === 'donor' ? (
+                      <><Gift className="h-3 w-3 mr-1" /> Donor</>
+                    ) : (
+                      <><Heart className="h-3 w-3 mr-1" /> Wisher</>
+                    )}
                   </Badge>
                 </div>
               </div>
@@ -162,26 +116,36 @@ export const UserProfile = () => {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
                 />
               </div>
+              
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell us about yourself..."
-                />
+                <Label htmlFor="role">I am primarily a...</Label>
+                <Select value={role} onValueChange={(value: 'wisher' | 'donor') => setRole(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="wisher">
+                      <div className="flex items-center">
+                        <Heart className="h-4 w-4 mr-2" />
+                        Wisher - I make wishes for help
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="donor">
+                      <div className="flex items-center">
+                        <Gift className="h-4 w-4 mr-2" />
+                        Donor - I help fulfill wishes
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  You can be both, but choose your primary role. This helps us personalize your experience.
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="City, State/Country"
-                />
-              </div>
+              
               <Button onClick={handleSave} disabled={loading}>
                 {loading ? 'Saving...' : 'Save Changes'}
               </Button>
@@ -190,115 +154,56 @@ export const UserProfile = () => {
         )}
       </Card>
 
-      {/* Badges */}
-      {userBadges.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5" />
-              Badges ({userBadges.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {userBadges.map((userBadge) => (
-                <div
-                  key={userBadge.id}
-                  className="text-center p-3 border rounded-lg"
-                >
-                  <div className="text-2xl mb-2">{userBadge.badges.icon}</div>
-                  <div className="font-medium text-sm">{userBadge.badges.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {userBadge.badges.description}
-                  </div>
-                </div>
-              ))}
+      {/* Role-specific Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Profile Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium mb-2">Your Role</h3>
+              <p className="text-sm text-muted-foreground">
+                {profile.role === 'donor' ? (
+                  <>
+                    As a <strong>Donor</strong>, you help make wishes come true by contributing to causes you care about. 
+                    You can browse wishes, make donations, and track your impact through karma points.
+                  </>
+                ) : (
+                  <>
+                    As a <strong>Wisher</strong>, you can create wishes for things you need help with. 
+                    Share your story, set a goal amount, and let the community help make your wish come true.
+                  </>
+                )}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tabs for Wishes and Donations */}
-      <Tabs defaultValue="wishes" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="wishes" className="flex items-center gap-2">
-            <Heart className="h-4 w-4" />
-            My Wishes ({userWishes.length})
-          </TabsTrigger>
-          <TabsTrigger value="donations" className="flex items-center gap-2">
-            <Gift className="h-4 w-4" />
-            My Donations ({userDonations.length})
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="wishes" className="space-y-4">
-          {userWishes.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">
-                  You haven't created any wishes yet.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            userWishes.map((wish) => (
-              <Card key={wish.id}>
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">{wish.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {wish.description.substring(0, 100)}...
-                      </p>
-                      <div className="flex items-center gap-4 mt-2">
-                        <Badge variant={wish.status === 'pending' ? 'default' : 'secondary'}>
-                          {wish.status}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          ${(wish.amount / 100).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-        
-        <TabsContent value="donations" className="space-y-4">
-          {userDonations.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">
-                  You haven't made any donations yet.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            userDonations.map((donation) => (
-              <Card key={donation.id}>
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">{donation.wishes.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Donated ${(donation.amount / 100).toFixed(2)}
-                      </p>
-                      {donation.message && (
-                        <p className="text-sm mt-1 italic">"{donation.message}"</p>
-                      )}
-                    </div>
-                    <Badge variant={donation.is_anonymous ? 'secondary' : 'default'}>
-                      {donation.is_anonymous ? 'Anonymous' : 'Public'}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-      </Tabs>
+            
+            <div>
+              <h3 className="font-medium mb-2">Account Stats</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Member since:</span>
+                  <br />
+                  <span className="font-medium">
+                    {new Date(profile.created_at || '').toLocaleDateString()}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Karma points:</span>
+                  <br />
+                  <span className="font-medium flex items-center gap-1">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    {profile.karma || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

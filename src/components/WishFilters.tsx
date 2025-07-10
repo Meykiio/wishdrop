@@ -28,7 +28,7 @@ export const WishFilters = ({
   onClearFilters,
 }: WishFiltersProps) => {
   const categories = [
-    { value: 'all', label: 'All Categories' },
+    { value: 'all_categories', label: 'All Categories' },
     { value: 'education', label: 'Education' },
     { value: 'medical', label: 'Medical' },
     { value: 'family', label: 'Family' },
@@ -40,11 +40,11 @@ export const WishFilters = ({
   ];
 
   const handleCategoryChange = (value: string) => {
-    onCategoryChange(value === 'all' ? '' : value);
+    onCategoryChange(value === 'all_categories' ? '' : value);
   };
 
   const handleUrgencyChange = (value: string) => {
-    onUrgencyChange(value === 'all' ? '' : value);
+    onUrgencyChange(value === 'all_urgency' ? '' : value);
   };
 
   return (
@@ -65,7 +65,7 @@ export const WishFilters = ({
           />
         </div>
 
-        <Select value={category || 'all'} onValueChange={handleCategoryChange}>
+        <Select value={category || 'all_categories'} onValueChange={handleCategoryChange}>
           <SelectTrigger>
             <SelectValue placeholder="Category" />
           </SelectTrigger>
@@ -78,12 +78,12 @@ export const WishFilters = ({
           </SelectContent>
         </Select>
 
-        <Select value={urgency || 'all'} onValueChange={handleUrgencyChange}>
+        <Select value={urgency || 'all_urgency'} onValueChange={handleUrgencyChange}>
           <SelectTrigger>
             <SelectValue placeholder="Urgency" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Urgency</SelectItem>
+            <SelectItem value="all_urgency">All Urgency</SelectItem>
             <SelectItem value="low">Low</SelectItem>
             <SelectItem value="medium">Medium</SelectItem>
             <SelectItem value="high">High</SelectItem>
