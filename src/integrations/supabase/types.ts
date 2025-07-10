@@ -14,7 +14,316 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      badges: {
+        Row: {
+          created_at: string | null
+          criteria_amount: number | null
+          criteria_count: number | null
+          description: string | null
+          icon: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          criteria_amount?: number | null
+          criteria_count?: number | null
+          description?: string | null
+          icon: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          criteria_amount?: number | null
+          criteria_count?: number | null
+          description?: string | null
+          icon?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      donations: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          donor_id: string | null
+          id: string
+          is_anonymous: boolean | null
+          message: string | null
+          status: string | null
+          stripe_session_id: string | null
+          wish_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          donor_id?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          message?: string | null
+          status?: string | null
+          stripe_session_id?: string | null
+          wish_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          donor_id?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          message?: string | null
+          status?: string | null
+          stripe_session_id?: string | null
+          wish_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_donor_id_fkey"
+            columns: ["donor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_wish_id_fkey"
+            columns: ["wish_id"]
+            isOneToOne: false
+            referencedRelation: "wishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          email: string
+          id: string
+          is_verified: boolean | null
+          karma: number | null
+          location: string | null
+          name: string | null
+          phone: string | null
+          profile_pic: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          email: string
+          id: string
+          is_verified?: boolean | null
+          karma?: number | null
+          location?: string | null
+          name?: string | null
+          phone?: string | null
+          profile_pic?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_verified?: boolean | null
+          karma?: number | null
+          location?: string | null
+          name?: string | null
+          phone?: string | null
+          profile_pic?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_reviewed: boolean | null
+          reason: string
+          reporter_id: string
+          wish_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_reviewed?: boolean | null
+          reason: string
+          reporter_id: string
+          wish_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_reviewed?: boolean | null
+          reason?: string
+          reporter_id?: string
+          wish_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_wish_id_fkey"
+            columns: ["wish_id"]
+            isOneToOne: false
+            referencedRelation: "wishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thank_you_messages: {
+        Row: {
+          created_at: string | null
+          donation_id: string
+          id: string
+          media_url: string | null
+          message: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          donation_id: string
+          id?: string
+          media_url?: string | null
+          message?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          donation_id?: string
+          id?: string
+          media_url?: string | null
+          message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thank_you_messages_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string | null
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string | null
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string | null
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wishes: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["wish_category"]
+          created_at: string | null
+          currency: string | null
+          description: string
+          expires_at: string | null
+          id: string
+          is_private: boolean | null
+          location: string | null
+          media_url: string | null
+          status: Database["public"]["Enums"]["wish_status"] | null
+          title: string
+          updated_at: string | null
+          urgency: Database["public"]["Enums"]["wish_urgency"] | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: Database["public"]["Enums"]["wish_category"]
+          created_at?: string | null
+          currency?: string | null
+          description: string
+          expires_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          location?: string | null
+          media_url?: string | null
+          status?: Database["public"]["Enums"]["wish_status"] | null
+          title: string
+          updated_at?: string | null
+          urgency?: Database["public"]["Enums"]["wish_urgency"] | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["wish_category"]
+          created_at?: string | null
+          currency?: string | null
+          description?: string
+          expires_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          location?: string | null
+          media_url?: string | null
+          status?: Database["public"]["Enums"]["wish_status"] | null
+          title?: string
+          updated_at?: string | null
+          urgency?: Database["public"]["Enums"]["wish_urgency"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +332,18 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "wisher" | "donor" | "admin"
+      wish_category:
+        | "education"
+        | "medical"
+        | "pet_care"
+        | "community"
+        | "technology"
+        | "family"
+        | "emergency"
+        | "other"
+      wish_status: "pending" | "funded" | "expired" | "rejected"
+      wish_urgency: "low" | "medium" | "high"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +470,20 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["wisher", "donor", "admin"],
+      wish_category: [
+        "education",
+        "medical",
+        "pet_care",
+        "community",
+        "technology",
+        "family",
+        "emergency",
+        "other",
+      ],
+      wish_status: ["pending", "funded", "expired", "rejected"],
+      wish_urgency: ["low", "medium", "high"],
+    },
   },
 } as const
