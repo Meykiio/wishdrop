@@ -1,111 +1,150 @@
 
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Search, Filter, X } from 'lucide-react';
 
 interface WishFiltersProps {
-  category: string;
-  urgency: string;
-  sortBy: string;
-  searchTerm: string;
-  onCategoryChange: (value: string) => void;
-  onUrgencyChange: (value: string) => void;
-  onSortByChange: (value: string) => void;
-  onSearchChange: (value: string) => void;
-  onClearFilters: () => void;
+  onFiltersChange: (filters: any) => void;
 }
 
-export const WishFilters = ({
-  category,
-  urgency,
-  sortBy,
-  searchTerm,
-  onCategoryChange,
-  onUrgencyChange,
-  onSortByChange,
-  onSearchChange,
-  onClearFilters,
-}: WishFiltersProps) => {
-  const categories = [
-    { value: 'all_categories', label: 'All Categories' },
-    { value: 'education', label: 'Education' },
-    { value: 'medical', label: 'Medical' },
-    { value: 'family', label: 'Family' },
-    { value: 'emergency', label: 'Emergency' },
-    { value: 'technology', label: 'Technology' },
-    { value: 'community', label: 'Community' },
-    { value: 'pet_care', label: 'Pet Care' },
-    { value: 'other', label: 'Other' },
-  ];
+export const WishFilters = ({ onFiltersChange }: WishFiltersProps) => {
+  const [category, setCategory] = useState<string>("all");
+  const [urgency, setUrgency] = useState<string>("all");
+  const [status, setStatus] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
-  const handleCategoryChange = (value: string) => {
-    onCategoryChange(value === 'all_categories' ? '' : value);
+  const handleFilterChange = () => {
+    const filters = {
+      category: category === "all" ? null : category,
+      urgency: urgency === "all" ? null : urgency,
+      status: status === "all" ? null : status,
+      search: searchTerm.trim() || null,
+    };
+    onFiltersChange(filters);
   };
 
-  const handleUrgencyChange = (value: string) => {
-    onUrgencyChange(value === 'all_urgency' ? '' : value);
+  const clearFilters = () => {
+    setCategory("all");
+    setUrgency("all");
+    setStatus("all");
+    setSearchTerm("");
+    onFiltersChange({
+      category: null,
+      urgency: null,
+      status: null,
+      search: null,
+    });
   };
+
+  const hasActiveFilters = category !== "all" || urgency !== "all" || status !== "all" || searchTerm.trim();
 
   return (
-    <div className="bg-card p-4 rounded-lg border space-y-4">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Filter className="h-4 w-4" />
-        Filters
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search wishes..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
-          />
+    <Card className="mb-6">
+      <CardContent className="p-4">
+        <div className="flex flex-col space-y-4">
+          {/* Search Bar */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search wishes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleFilterChange()}
+                className="pl-10"
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2"
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+            </Button>
+          </div>
+
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="education">Education</SelectItem>
+                    <SelectItem value="medical">Medical</SelectItem>
+                    <SelectItem value="pet_care">Pet Care</SelectItem>
+                    <SelectItem value="community">Community</SelectItem>
+                    <SelectItem value="technology">Technology</SelectItem>
+                    <SelectItem value="family">Family</SelectItem>
+                    <SelectItem value="emergency">Emergency</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="urgency">Urgency</Label>
+                <Select value={urgency} onValueChange={setUrgency}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All urgency levels" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Urgency</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="funded">Funded</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex justify-between items-center pt-2">
+            <Button onClick={handleFilterChange} className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Apply Filters
+            </Button>
+            
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                onClick={clearFilters}
+                className="flex items-center gap-2"
+              >
+                <X className="h-4 w-4" />
+                Clear All
+              </Button>
+            )}
+          </div>
         </div>
-
-        <Select value={category || 'all_categories'} onValueChange={handleCategoryChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((cat) => (
-              <SelectItem key={cat.value} value={cat.value}>
-                {cat.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={urgency || 'all_urgency'} onValueChange={handleUrgencyChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Urgency" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all_urgency">All Urgency</SelectItem>
-            <SelectItem value="low">Low</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="high">High</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={sortBy} onValueChange={onSortByChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="created_at">Newest</SelectItem>
-            <SelectItem value="expires_at">Expiring Soon</SelectItem>
-            <SelectItem value="amount">Amount (Low to High)</SelectItem>
-            <SelectItem value="amount_desc">Amount (High to Low)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <Button variant="outline" size="sm" onClick={onClearFilters}>
-        Clear Filters
-      </Button>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

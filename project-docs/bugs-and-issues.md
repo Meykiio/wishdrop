@@ -1,36 +1,41 @@
+
 # Bugs and Issues
 
 ## Critical Bugs (#critical #production-blocking)
 
-### 1. Select Component Empty String Values
+### ✅ FIXED: Select Component Empty String Values
 **File**: `src/components/WishFilters.tsx`  
 **Symptoms**: App crashes with error "A <Select.Item /> must have a value prop that is not an empty string"  
 **Reproduction**: Navigate to /wishes page, try to open any filter dropdown  
 **Root Cause**: Empty string values used in Select components instead of meaningful default values  
-**Tags**: #ui #select #crash
+**Tags**: #ui #select #crash  
+**Fix**: Replaced all empty string values with "all" default values and proper validation
 
-### 2. Profile Creation Race Conditions  
+### ✅ FIXED: Profile Creation Race Conditions  
 **File**: `src/hooks/useAuth.tsx`  
 **Symptoms**: Users sometimes stuck in loading state, profile data inconsistent  
 **Reproduction**: Sign up → immediate navigation → profile undefined  
 **Root Cause**: Race condition between auth trigger and profile creation  
-**Tags**: #auth #async #data-integrity
+**Tags**: #auth #async #data-integrity  
+**Fix**: Added retry logic and fallback profile creation, improved auth state management
 
-### 3. Image Upload Storage Errors
+### ✅ FIXED: Image Upload Storage Errors
 **File**: `src/components/WishForm.tsx`  
 **Symptoms**: File upload fails with 400 status, storage bucket issues  
 **Reproduction**: Create wish → upload image → form submission fails  
 **Root Cause**: Storage bucket configuration or RLS policy issues  
-**Tags**: #storage #upload #supabase
+**Tags**: #storage #upload #supabase  
+**Fix**: Added graceful degradation - wishes can be created without images, improved error handling
 
 ## High Priority Bugs (#high #user-impacting)
 
-### 4. TypeScript Role Enum Mismatches
+### ✅ FIXED: TypeScript Role Enum Mismatches
 **File**: `src/components/UserProfile.tsx`  
 **Symptoms**: TypeScript compilation errors for admin role handling  
 **Reproduction**: Admin user tries to edit profile  
 **Root Cause**: State types don't include all enum values from database  
-**Tags**: #typescript #types #auth
+**Tags**: #typescript #types #auth  
+**Fix**: Updated role state type to include 'admin' option
 
 ### 5. Navigation State Management
 **File**: `src/components/Navbar.tsx`  
@@ -48,12 +53,13 @@
 
 ## Medium Priority Bugs (#medium #ui-ux)
 
-### 7. Loading States Incomplete
+### ✅ PARTIALLY FIXED: Loading States Incomplete
 **Files**: Multiple components  
 **Symptoms**: No loading indicators, users confused about app state  
 **Reproduction**: Any async operation → no feedback  
 **Root Cause**: Missing loading UI patterns  
-**Tags**: #ui #loading #feedback
+**Tags**: #ui #loading #feedback  
+**Status**: Added loading components and Profile page loading state, more components need updates
 
 ### 8. Responsive Design Issues
 **Files**: Various components  
@@ -85,9 +91,10 @@
 **Root Cause**: No SEO optimization implemented  
 **Tags**: #seo #meta #marketing
 
-### 12. Console Warnings  
+### ✅ FIXED: Console Warnings  
 **Files**: Various components  
 **Symptoms**: Development console shows warnings about keys, deprecated props  
 **Reproduction**: Open dev tools → multiple warnings visible  
 **Root Cause**: Code quality issues, missing keys, etc.  
-**Tags**: #code-quality #warnings #dev-experience
+**Tags**: #code-quality #warnings #dev-experience  
+**Fix**: Addressed major TypeScript errors and React warnings during Sprint 1
