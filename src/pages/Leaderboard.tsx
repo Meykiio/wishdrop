@@ -4,20 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Crown, Heart, Star } from 'lucide-react';
+import { Trophy, Crown, Heart, Star, Award, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 type LeaderboardUser = Tables<'profiles'> & {
   donation_count?: number;
   donation_total?: number;
   badge_count?: number;
+  wish_count?: number;
+  fulfilled_wishes?: number;
 };
 
 const Leaderboard = () => {
   const [topDonors, setTopDonors] = useState<LeaderboardUser[]>([]);
   const [topKarma, setTopKarma] = useState<LeaderboardUser[]>([]);
   const [topWishers, setTopWishers] = useState<LeaderboardUser[]>([]);
+  const [topBadgeHolders, setTopBadgeHolders] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +35,7 @@ const Leaderboard = () => {
         .from('profiles')
         .select(`
           *,
-          donations!inner(amount)
+          donations!inner(amount, status)
         `)
         .order('karma', { ascending: false })
         .limit(10);
@@ -39,9 +43,10 @@ const Leaderboard = () => {
       // Process donors data
       const processedDonors = donors?.map(user => ({
         ...user,
-        donation_total: user.donations?.reduce((sum: number, d: any) => sum + d.amount, 0) || 0,
-        donation_count: user.donations?.length || 0,
-      })) || [];
+        donation_total: user.donations?.reduce((sum: number, d: any) => 
+          d.status === 'completed' ? sum + d.amount : sum, 0) || 0,
+        donation_count: user.donations?.filter((d: any) => d.status === 'completed').length || 0,
+      })).sort((a, b) => (b.donation_total || 0) - (a.donation_total || 0)) || [];
 
       setTopDonors(processedDonors);
 
@@ -54,7 +59,7 @@ const Leaderboard = () => {
 
       setTopKarma(karmaUsers || []);
 
-      // Top wishers (users with most fulfilled wishes)
+      // Top wishers (users with most wishes)
       const { data: wishers } = await supabase
         .from('profiles')
         .select(`
@@ -63,7 +68,30 @@ const Leaderboard = () => {
         `)
         .limit(10);
 
-      setTopWishers(wishers || []);
+      const processedWishers = wishers?.map(user => ({
+        ...user,
+        wish_count: user.wishes?.length || 0,
+        fulfilled_wishes: user.wishes?.filter((w: any) => w.status === 'funded').length || 0,
+      })).sort((a, b) => (b.wish_count || 0) - (a.wish_count || 0)) || [];
+
+      setTopWishers(processedWishers);
+
+      // Top badge holders
+      const { data: badgeHolders } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_badges!inner(id)
+        `)
+        .limit(10);
+
+      const processedBadgeHolders = badgeHolders?.map(user => ({
+        ...user,
+        badge_count: user.user_badges?.length || 0,
+      })).sort((a, b) => (b.badge_count || 0) - (a.badge_count || 0)) || [];
+
+      setTopBadgeHolders(processedBadgeHolders);
+
     } catch (error) {
       console.error('Error fetching leaderboard data:', error);
     } finally {
@@ -82,12 +110,14 @@ const Leaderboard = () => {
     users, 
     title, 
     icon, 
-    metricKey 
+    metricKey,
+    metricFormatter 
   }: { 
     users: LeaderboardUser[], 
     title: string, 
     icon: React.ReactNode,
-    metricKey: keyof LeaderboardUser
+    metricKey: keyof LeaderboardUser,
+    metricFormatter?: (value: any) => string
   }) => (
     <Card>
       <CardHeader>
@@ -112,9 +142,10 @@ const Leaderboard = () => {
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{user.name || 'Anonymous'}</p>
                 <p className="text-sm text-muted-foreground">
-                  {metricKey === 'karma' && `${user.karma || 0} karma`}
-                  {metricKey === 'donation_total' && `$${((user.donation_total || 0) / 100).toFixed(2)} donated`}
-                  {metricKey === 'donation_count' && `${user.donation_count || 0} donations`}
+                  {metricFormatter ? 
+                    metricFormatter(user[metricKey]) : 
+                    String(user[metricKey] || 0)
+                  }
                 </p>
               </div>
               {index < 3 && (
@@ -132,7 +163,9 @@ const Leaderboard = () => {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Loading leaderboard...</div>
+        <div className="flex justify-center">
+          <LoadingSpinner />
+        </div>
       </div>
     );
   }
@@ -147,7 +180,7 @@ const Leaderboard = () => {
       </div>
 
       <Tabs defaultValue="karma" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="karma">
             <Star className="h-4 w-4 mr-2" />
             Top Karma
@@ -157,8 +190,12 @@ const Leaderboard = () => {
             Top Donors
           </TabsTrigger>
           <TabsTrigger value="wishers">
-            <Trophy className="h-4 w-4 mr-2" />
+            <Users className="h-4 w-4 mr-2" />
             Active Wishers
+          </TabsTrigger>
+          <TabsTrigger value="badges">
+            <Award className="h-4 w-4 mr-2" />
+            Badge Collectors
           </TabsTrigger>
         </TabsList>
 
@@ -168,6 +205,7 @@ const Leaderboard = () => {
             title="Highest Karma Score"
             icon={<Star className="h-5 w-5 text-yellow-500" />}
             metricKey="karma"
+            metricFormatter={(karma) => `${karma || 0} karma`}
           />
         </TabsContent>
 
@@ -177,6 +215,7 @@ const Leaderboard = () => {
             title="Most Generous Donors"
             icon={<Heart className="h-5 w-5 text-red-500" />}
             metricKey="donation_total"
+            metricFormatter={(total) => `$${((total || 0) / 100).toFixed(2)} donated`}
           />
         </TabsContent>
 
@@ -184,8 +223,19 @@ const Leaderboard = () => {
           <LeaderboardCard
             users={topWishers}
             title="Most Active Wishers"
-            icon={<Trophy className="h-5 w-5 text-blue-500" />}
-            metricKey="donation_count"
+            icon={<Users className="h-5 w-5 text-blue-500" />}
+            metricKey="wish_count"
+            metricFormatter={(count) => `${count || 0} wishes created`}
+          />
+        </TabsContent>
+
+        <TabsContent value="badges" className="mt-6">
+          <LeaderboardCard
+            users={topBadgeHolders}
+            title="Top Badge Collectors"
+            icon={<Award className="h-5 w-5 text-purple-500" />}
+            metricKey="badge_count"
+            metricFormatter={(count) => `${count || 0} badges earned`}
           />
         </TabsContent>
       </Tabs>

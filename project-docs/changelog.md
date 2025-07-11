@@ -22,6 +22,35 @@ Format for future entries:
 
 ---
 
+## 2025-01-11 - v0.3.0 - Sprint 4 Complete
+
+### Added
+- Complete badge system with BadgeDisplay, BadgeCatalog, and BadgeNotification components
+- Badge earning notification system with real-time polling
+- Karma point display system with levels and progress tracking
+- Enhanced leaderboard with four categories: karma, donors, active wishers, and badge collectors
+- Badge catalog page accessible from navigation
+- User profile integration with karma display and earned badges
+- Badge notification hook for real-time badge earning alerts
+
+### Changed
+- WishFilters component now supports external prop passing for better integration
+- Leaderboard redesigned with four tabs instead of three
+- Profile page enhanced with karma display and badge showcase
+- Navbar updated with badges link and improved mobile navigation
+- App.tsx updated to include badge notifications and new routes
+
+### Fixed
+- Build error in WishFilters component due to interface mismatch
+- Leaderboard data processing for accurate donation totals and wish counts
+- Badge display logic for earned vs available badges
+
+### Security
+- Badge system respects user authentication for personal badge data
+- Notification system only shows badges for authenticated users
+
+---
+
 ## 2025-01-11 - v0.2.0 - Sprint 1 Complete
 
 ### Added

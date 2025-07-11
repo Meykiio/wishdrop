@@ -9,14 +9,49 @@ import { Search, Filter, X } from 'lucide-react';
 
 interface WishFiltersProps {
   onFiltersChange: (filters: any) => void;
+  category?: string;
+  urgency?: string;
+  sortBy?: string;
+  searchTerm?: string;
+  onCategoryChange?: (value: string) => void;
+  onUrgencyChange?: (value: string) => void;
+  onSortByChange?: (value: string) => void;
+  onSearchChange?: (value: string) => void;
+  onClearFilters?: () => void;
 }
 
-export const WishFilters = ({ onFiltersChange }: WishFiltersProps) => {
-  const [category, setCategory] = useState<string>("all");
-  const [urgency, setUrgency] = useState<string>("all");
+export const WishFilters = ({ 
+  onFiltersChange,
+  category: externalCategory,
+  urgency: externalUrgency,
+  sortBy: externalSortBy,
+  searchTerm: externalSearchTerm,
+  onCategoryChange,
+  onUrgencyChange,
+  onSortByChange,
+  onSearchChange,
+  onClearFilters
+}: WishFiltersProps) => {
+  const [category, setCategory] = useState<string>(externalCategory || "all");
+  const [urgency, setUrgency] = useState<string>(externalUrgency || "all");
   const [status, setStatus] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(externalSearchTerm || "");
   const [showFilters, setShowFilters] = useState(false);
+
+  const handleCategoryChange = (value: string) => {
+    setCategory(value);
+    onCategoryChange?.(value);
+  };
+
+  const handleUrgencyChange = (value: string) => {
+    setUrgency(value);
+    onUrgencyChange?.(value);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    onSearchChange?.(value);
+  };
 
   const handleFilterChange = () => {
     const filters = {
@@ -39,6 +74,7 @@ export const WishFilters = ({ onFiltersChange }: WishFiltersProps) => {
       status: null,
       search: null,
     });
+    onClearFilters?.();
   };
 
   const hasActiveFilters = category !== "all" || urgency !== "all" || status !== "all" || searchTerm.trim();
@@ -55,7 +91,7 @@ export const WishFilters = ({ onFiltersChange }: WishFiltersProps) => {
                 type="text"
                 placeholder="Search wishes..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleFilterChange()}
                 className="pl-10"
               />
@@ -75,7 +111,7 @@ export const WishFilters = ({ onFiltersChange }: WishFiltersProps) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
-                <Select value={category} onValueChange={setCategory}>
+                <Select value={category} onValueChange={handleCategoryChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="All categories" />
                   </SelectTrigger>
@@ -95,7 +131,7 @@ export const WishFilters = ({ onFiltersChange }: WishFiltersProps) => {
 
               <div className="space-y-2">
                 <Label htmlFor="urgency">Urgency</Label>
-                <Select value={urgency} onValueChange={setUrgency}>
+                <Select value={urgency} onValueChange={handleUrgencyChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="All urgency levels" />
                   </SelectTrigger>
